@@ -4,7 +4,9 @@ from flask_cors import CORS
 from config import Config
 from extensions import db
 
-import models
+# Import all models before create_all()
+from models import *
+
 from routes.exam_routes import exam_bp
 
 
@@ -17,7 +19,6 @@ def create_app():
 
     db.init_app(app)
 
-    # Register Blueprints
     app.register_blueprint(
         exam_bp,
         url_prefix="/api/exams"
