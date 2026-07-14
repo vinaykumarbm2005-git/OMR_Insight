@@ -8,6 +8,7 @@ from extensions import db
 from models import *
 
 from routes.exam_routes import exam_bp
+from routes.answer_key_routes import answer_key_bp
 
 
 def create_app():
@@ -23,6 +24,10 @@ def create_app():
         exam_bp,
         url_prefix="/api/exams"
     )
+    app.register_blueprint(
+    answer_key_bp,
+    url_prefix="/api/exams"
+)
 
     with app.app_context():
         db.create_all()
@@ -35,6 +40,7 @@ def create_app():
         }
 
     return app
+
 
 
 app = create_app()
