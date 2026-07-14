@@ -3,6 +3,7 @@ from flask_cors import CORS
 
 from config import DB_PATH, Config
 from extensions import db
+import models
 
 
 def create_app():
