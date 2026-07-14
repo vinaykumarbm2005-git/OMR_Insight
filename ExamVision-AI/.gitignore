@@ -23,3 +23,9 @@ images/grayscale_omr.jpg
 # OS files
 .DS_Store
 Thumbs.db
+
+# Generated images
+images/grayscale_omr.jpg
+images/blurred_omr.jpg
+images/edges_omr.jpg
+captured_omr.jpg

@@ -10,19 +10,34 @@ if image is None:
     exit()
 
 # =====================================
-# Image Information
-# =====================================
-height, width, channels = image.shape
-
-print("\n===== IMAGE INFORMATION =====")
-print("Width    :", width)
-print("Height   :", height)
-print("Channels :", channels)
-
-# =====================================
 # Convert to Grayscale
 # =====================================
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# =====================================
+# Apply Gaussian Blur
+# =====================================
+blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+# =====================================
+# Detect Edges
+# =====================================
+edges = cv2.Canny(
+    blurred,
+    75,     # lower threshold
+    200     # upper threshold
+)
+
+# =====================================
+# Save Output Images
+# =====================================
+cv2.imwrite("images/grayscale_omr.jpg", gray)
+cv2.imwrite("images/blurred_omr.jpg", blurred)
+cv2.imwrite("images/edges_omr.jpg", edges)
+
+print("Grayscale image saved.")
+print("Blurred image saved.")
+print("Edge image saved.")
 
 # =====================================
 # Resize Images for Display
@@ -35,37 +50,28 @@ original_display = cv2.resize(
     (display_width, display_height)
 )
 
-gray_display = cv2.resize(
-    gray,
+edge_display = cv2.resize(
+    edges,
     (display_width, display_height)
 )
 
 # =====================================
 # Create Windows
 # =====================================
-cv2.namedWindow("Original OMR", cv2.WINDOW_NORMAL)
-cv2.namedWindow("Grayscale OMR", cv2.WINDOW_NORMAL)
+cv2.namedWindow("Original OMR")
+cv2.namedWindow("Edges")
 
-# Set window size
-cv2.resizeWindow("Original OMR", display_width, display_height)
-cv2.resizeWindow("Grayscale OMR", display_width, display_height)
-
-# Move windows to left and right
 cv2.moveWindow("Original OMR", 50, 50)
-cv2.moveWindow("Grayscale OMR", 700, 50)
+cv2.moveWindow("Edges", 700, 50)
 
 # =====================================
 # Show Images
 # =====================================
 cv2.imshow("Original OMR", original_display)
-cv2.imshow("Grayscale OMR", gray_display)
+cv2.imshow("Edges", edge_display)
 
 # =====================================
-# Wait for key press
+# Wait for Key Press
 # =====================================
 cv2.waitKey(0)
-
-# =====================================
-# Close all windows
-# =====================================
 cv2.destroyAllWindows()
