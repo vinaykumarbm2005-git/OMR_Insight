@@ -9,63 +9,107 @@ if image is None:
     print("Image not found!")
     exit()
 
-# =====================================
-# Image Information
-# =====================================
-height, width, channels = image.shape
-
-print("\n===== IMAGE INFORMATION =====")
-print("Width    :", width)
-print("Height   :", height)
-print("Channels :", channels)
+original = image.copy()
 
 # =====================================
-# Convert to Grayscale
+# Grayscale
 # =====================================
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # =====================================
-# Resize Images for Display
+# Blur
 # =====================================
-display_width = 600
-display_height = 800
+blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
-original_display = cv2.resize(
-    image,
-    (display_width, display_height)
+# =====================================
+# Edge Detection
+# =====================================
+edges = cv2.Canny(blurred, 75, 200)
+
+# =====================================
+# Find Contours
+# =====================================
+contours, _ = cv2.findContours(
+    edges,
+    cv2.RETR_LIST,
+    cv2.CHAIN_APPROX_SIMPLE
 )
 
-gray_display = cv2.resize(
-    gray,
-    (display_width, display_height)
+# Sort by contour area
+contours = sorted(
+    contours,
+    key=cv2.contourArea,
+    reverse=True
+)
+
+sheet_contour = None
+
+# =====================================
+# Check largest contours
+# =====================================
+for contour in contours[:20]:
+
+    perimeter = cv2.arcLength(contour, True)
+
+    approx = cv2.approxPolyDP(
+        contour,
+        0.02 * perimeter,
+        True
+    )
+
+    area = cv2.contourArea(contour)
+
+    print(
+        f"Corners: {len(approx)}  Area: {int(area)}"
+    )
+
+    if len(approx) == 4 and area > 500000:
+        sheet_contour = approx
+        break
+
+# =====================================
+# Draw result
+# =====================================
+if sheet_contour is not None:
+
+    cv2.drawContours(
+        original,
+        [sheet_contour],
+        -1,
+        (0, 255, 0),
+        5
+    )
+
+    print("\nOMR Sheet Found")
+
+else:
+    print("\nOMR Sheet Not Found")
+
+# =====================================
+# Resize display
+# =====================================
+display_original = cv2.resize(
+    original,
+    (700, 900)
+)
+
+display_edges = cv2.resize(
+    edges,
+    (700, 900)
 )
 
 # =====================================
-# Create Windows
+# Show images
 # =====================================
-cv2.namedWindow("Original OMR", cv2.WINDOW_NORMAL)
-cv2.namedWindow("Grayscale OMR", cv2.WINDOW_NORMAL)
+cv2.imshow(
+    "Detected OMR Sheet",
+    display_original
+)
 
-# Set window size
-cv2.resizeWindow("Original OMR", display_width, display_height)
-cv2.resizeWindow("Grayscale OMR", display_width, display_height)
+cv2.imshow(
+    "Edges",
+    display_edges
+)
 
-# Move windows to left and right
-cv2.moveWindow("Original OMR", 50, 50)
-cv2.moveWindow("Grayscale OMR", 700, 50)
-
-# =====================================
-# Show Images
-# =====================================
-cv2.imshow("Original OMR", original_display)
-cv2.imshow("Grayscale OMR", gray_display)
-
-# =====================================
-# Wait for key press
-# =====================================
 cv2.waitKey(0)
-
-# =====================================
-# Close all windows
-# =====================================
 cv2.destroyAllWindows()

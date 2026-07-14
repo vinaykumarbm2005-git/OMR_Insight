@@ -1,0 +1,6 @@
+{
+    "exam_type": "NEET",
+    "total_questions": 200,
+    "options_per_question": 4,
+    "roll_number_digits": 6
+}
