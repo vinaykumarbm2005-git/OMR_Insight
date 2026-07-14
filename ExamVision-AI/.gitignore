@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+
+# VS Code settings
+.vscode/
+
+# Generated files
+captured_omr.jpg
+images/grayscale_omr.jpg
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
