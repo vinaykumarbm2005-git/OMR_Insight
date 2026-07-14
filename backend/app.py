@@ -8,7 +8,7 @@ from models import *
 
 from routes.exam_routes import exam_bp
 from routes.answer_key_routes import answer_key_bp
-
+from routes.student_routes import student_bp
 
 
 def create_app():
@@ -30,6 +30,10 @@ def create_app():
         answer_key_bp,
         url_prefix="/api/exams"
     )
+    app.register_blueprint(
+    student_bp,
+    url_prefix="/api/students"
+)
 
     
     with app.app_context():

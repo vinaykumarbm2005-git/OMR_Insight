@@ -8,45 +8,44 @@ class Result(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    submission_id = db.Column(
+    student_id = db.Column(
         db.Integer,
-        db.ForeignKey("omr_submissions.id"),
+        db.ForeignKey("students.id"),
         nullable=False,
         unique=True
     )
 
-    detected_answers = db.Column(
-        db.JSON,
-        nullable=False
-    )
-
     score = db.Column(
         db.Float,
-        nullable=False
+        nullable=False,
+        default=0
     )
 
     correct_answers = db.Column(
         db.Integer,
-        nullable=False
+        nullable=False,
+        default=0
     )
 
-    wrong_answers = db.Column(
+    incorrect_answers = db.Column(
         db.Integer,
-        nullable=False
+        nullable=False,
+        default=0
     )
 
-    unanswered = db.Column(
+    unattempted_questions = db.Column(
         db.Integer,
-        nullable=False
+        nullable=False,
+        default=0
     )
 
-    evaluated_at = db.Column(
+    scan_time = db.Column(
         db.DateTime,
         default=datetime.utcnow
     )
 
-    submission = db.relationship(
-        "OMRSubmission",
+    student = db.relationship(
+        "Student",
         backref=db.backref(
             "result",
             uselist=False
@@ -54,4 +53,4 @@ class Result(db.Model):
     )
 
     def __repr__(self):
-        return f"<Result Submission {self.submission_id}>"
+        return f"<Result Student {self.student_id}>"
