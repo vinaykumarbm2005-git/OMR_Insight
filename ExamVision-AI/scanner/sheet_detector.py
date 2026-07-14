@@ -1,7 +1,7 @@
 import cv2
 
 # =====================================
-# Load Image
+# STEP 1 : Load Image
 # =====================================
 image = cv2.imread("images/sample_omr.jpeg")
 
@@ -9,69 +9,57 @@ if image is None:
     print("Image not found!")
     exit()
 
+# Keep original copy
+original = image.copy()
+
 # =====================================
-# Convert to Grayscale
+# STEP 2 : Convert to Grayscale
 # =====================================
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # =====================================
-# Apply Gaussian Blur
+# STEP 3 : Gaussian Blur
 # =====================================
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
 # =====================================
-# Detect Edges
+# STEP 4 : Edge Detection
 # =====================================
-edges = cv2.Canny(
-    blurred,
-    75,     # lower threshold
-    200     # upper threshold
-)
+edges = cv2.Canny(blurred, 75, 200)
 
 # =====================================
-# Save Output Images
+# STEP 5 : Find Contours
 # =====================================
-cv2.imwrite("images/grayscale_omr.jpg", gray)
-cv2.imwrite("images/blurred_omr.jpg", blurred)
-cv2.imwrite("images/edges_omr.jpg", edges)
-
-print("Grayscale image saved.")
-print("Blurred image saved.")
-print("Edge image saved.")
-
-# =====================================
-# Resize Images for Display
-# =====================================
-display_width = 600
-display_height = 800
-
-original_display = cv2.resize(
-    image,
-    (display_width, display_height)
-)
-
-edge_display = cv2.resize(
+contours, hierarchy = cv2.findContours(
     edges,
-    (display_width, display_height)
+    cv2.RETR_EXTERNAL,
+    cv2.CHAIN_APPROX_SIMPLE
+)
+
+print(f"\nTotal contours detected: {len(contours)}")
+
+# =====================================
+# STEP 6 : Draw Contours
+# =====================================
+cv2.drawContours(
+    original,
+    contours,
+    -1,
+    (0, 255, 0),
+    3
 )
 
 # =====================================
-# Create Windows
+# STEP 7 : Resize for Display
 # =====================================
-cv2.namedWindow("Original OMR")
-cv2.namedWindow("Edges")
-
-cv2.moveWindow("Original OMR", 50, 50)
-cv2.moveWindow("Edges", 700, 50)
+display_original = cv2.resize(original, (700, 900))
+display_edges = cv2.resize(edges, (700, 900))
 
 # =====================================
-# Show Images
+# STEP 8 : Display Results
 # =====================================
-cv2.imshow("Original OMR", original_display)
-cv2.imshow("Edges", edge_display)
+cv2.imshow("Detected Contours", display_original)
+cv2.imshow("Edges", display_edges)
 
-# =====================================
-# Wait for Key Press
-# =====================================
 cv2.waitKey(0)
 cv2.destroyAllWindows()
