@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from extensions import db
 
 
@@ -11,27 +9,33 @@ class AnswerKey(db.Model):
     exam_id = db.Column(
         db.Integer,
         db.ForeignKey("exams.id"),
-        nullable=False,
-        unique=True
-    )
-
-    answers = db.Column(
-        db.JSON,
         nullable=False
     )
 
-    created_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow
+    question_number = db.Column(
+        db.Integer,
+        nullable=False
+    )
+
+    correct_answer = db.Column(
+        db.String(2),
+        nullable=False
+    )
+
+    chapter = db.Column(
+        db.String(100),
+        nullable=False
+    )
+
+    concept = db.Column(
+        db.String(150),
+        nullable=False
     )
 
     exam = db.relationship(
         "Exam",
-        backref=db.backref(
-            "answer_key",
-            uselist=False
-        )
+        backref="answer_keys"
     )
 
     def __repr__(self):
-        return f"<AnswerKey Exam {self.exam_id}>"
+        return f"<AnswerKey Exam {self.exam_id} Q{self.question_number}>"

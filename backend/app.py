@@ -30,10 +30,7 @@ def create_app():
         answer_key_bp,
         url_prefix="/api/exams"
     )
-    app.register_blueprint(
-    student_bp,
-    url_prefix="/api/students"
-)
+    
 
     
     with app.app_context():
