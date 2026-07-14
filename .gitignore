@@ -1,1 +1,16 @@
+# VS Code
 .vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual Environments
+venv/
+.env
+
+# Node
+node_modules/
+
+# Build outputs
+dist/
