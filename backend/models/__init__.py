@@ -1,9 +1,9 @@
 from .exam import Exam
 from .answer_key import AnswerKey
-from .omr_submission import OMRSubmission
+from .result import Result
 
 __all__ = [
     "Exam",
     "AnswerKey",
-    "OMRSubmission"
+    "Result"
 ]
