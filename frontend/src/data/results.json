@@ -1,0 +1,159 @@
+{
+  "examDetails": {
+    "name": "Midterm Physics 101",
+    "type": "College Examination",
+    "totalStudents": 450,
+    "date": "Oct 24, 2026",
+    "status": "Completed"
+  },
+  "summary": {
+    "totalStudents": 450,
+    "evaluated": 450,
+    "highestScore": 98,
+    "lowestScore": 12,
+    "averageScore": 68.4,
+    "passPercentage": 82,
+    "failedStudents": 81,
+    "accuracy": 99.9
+  },
+  "charts": {
+    "scoreDistribution": [
+      { "range": "0-20", "count": 15 },
+      { "range": "21-40", "count": 66 },
+      { "range": "41-60", "count": 120 },
+      { "range": "61-80", "count": 180 },
+      { "range": "81-100", "count": 69 }
+    ],
+    "passFail": [
+      { "name": "Pass", "value": 369, "color": "#10B981" },
+      { "name": "Fail", "value": 81, "color": "#EF4444" }
+    ],
+    "trend": [
+      { "exam": "Test 1", "score": 62 },
+      { "exam": "Test 2", "score": 65 },
+      { "exam": "Midterm", "score": 68.4 }
+    ],
+    "progress": [
+      { "time": "10:00", "evaluated": 0 },
+      { "time": "10:15", "evaluated": 120 },
+      { "time": "10:30", "evaluated": 280 },
+      { "time": "10:45", "evaluated": 450 }
+    ],
+    "subjectPerformance": [
+      { "subject": "Mechanics", "score": 75, "color": "#3B82F6" },
+      { "subject": "Optics", "score": 62, "color": "#8B5CF6" },
+      { "subject": "Thermodynamics", "score": 88, "color": "#10B981" },
+      { "subject": "Electromagnetism", "score": 55, "color": "#F59E0B" }
+    ]
+  },
+  "leaderboards": {
+    "top": [
+      { "rank": 1, "name": "Aarav Patel", "score": 98 },
+      { "rank": 2, "name": "Diya Sharma", "score": 97 },
+      { "rank": 3, "name": "Rohan Gupta", "score": 95 }
+    ],
+    "bottom": [
+      { "rank": 450, "name": "Vihaan Kumar", "score": 12 },
+      { "rank": 449, "name": "Kavya Singh", "score": 15 },
+      { "rank": 448, "name": "Arjun Reddy", "score": 18 }
+    ]
+  },
+  "recentExams": [
+    { "name": "Chemistry Quiz 3", "students": 200, "average": 72, "date": "Oct 20, 2026", "status": "Published" },
+    { "name": "Maths Final", "students": 450, "average": 65, "date": "Oct 18, 2026", "status": "Published" },
+    { "name": "Biology Mock", "students": 150, "average": 81, "date": "Oct 15, 2026", "status": "Published" }
+  ],
+  "students": [
+    {
+      "id": "STU001",
+      "name": "Aarav Patel",
+      "rollNumber": "RN-001",
+      "score": 98,
+      "correct": 98,
+      "incorrect": 2,
+      "unattempted": 0,
+      "percentage": 98,
+      "rank": 1,
+      "status": "Excellent",
+      "weakAreas": ["Electromagnetism"]
+    },
+    {
+      "id": "STU002",
+      "name": "Diya Sharma",
+      "rollNumber": "RN-002",
+      "score": 97,
+      "correct": 97,
+      "incorrect": 1,
+      "unattempted": 2,
+      "percentage": 97,
+      "rank": 2,
+      "status": "Excellent",
+      "weakAreas": ["Optics"]
+    },
+    {
+      "id": "STU003",
+      "name": "Vihaan Kumar",
+      "rollNumber": "RN-003",
+      "score": 12,
+      "correct": 12,
+      "incorrect": 70,
+      "unattempted": 18,
+      "percentage": 12,
+      "rank": 450,
+      "status": "Needs Improvement",
+      "weakAreas": ["Mechanics", "Thermodynamics", "Optics"]
+    },
+    {
+      "id": "STU004",
+      "name": "Ananya Singh",
+      "rollNumber": "RN-004",
+      "score": 65,
+      "correct": 65,
+      "incorrect": 30,
+      "unattempted": 5,
+      "percentage": 65,
+      "rank": 120,
+      "status": "Good",
+      "weakAreas": ["Electromagnetism"]
+    },
+    {
+      "id": "STU005",
+      "name": "Rohan Gupta",
+      "rollNumber": "RN-005",
+      "score": 55,
+      "correct": 55,
+      "incorrect": 40,
+      "unattempted": 5,
+      "percentage": 55,
+      "rank": 210,
+      "status": "Average",
+      "weakAreas": ["Optics", "Electromagnetism"]
+    },
+    {
+      "id": "STU006",
+      "name": "Kavya Singh",
+      "rollNumber": "RN-006",
+      "score": 85,
+      "correct": 85,
+      "incorrect": 10,
+      "unattempted": 5,
+      "percentage": 85,
+      "rank": 45,
+      "status": "Good",
+      "weakAreas": ["Mechanics"]
+    },
+    {
+      "id": "STU007",
+      "name": "Arjun Reddy",
+      "rollNumber": "RN-007",
+      "score": 42,
+      "correct": 42,
+      "incorrect": 50,
+      "unattempted": 8,
+      "percentage": 42,
+      "rank": 310,
+      "status": "Needs Improvement",
+      "weakAreas": ["Thermodynamics", "Optics"]
+    }
+  ]
+}

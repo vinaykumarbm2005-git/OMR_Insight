@@ -1,0 +1,81 @@
+{
+  "STU001": {
+    "profile": {
+      "name": "Aarav Patel",
+      "rollNumber": "RN-001",
+      "examName": "Midterm Physics 101",
+      "examType": "College Examination",
+      "date": "Oct 24, 2026",
+      "overallScore": 98,
+      "maxScore": 100,
+      "percentage": 98,
+      "rank": 1,
+      "status": "Excellent",
+      "pass": true
+    },
+    "analytics": {
+      "correct": 98,
+      "incorrect": 2,
+      "unattempted": 0,
+      "accuracy": 98,
+      "timeTaken": "2h 45m",
+      "evaluationStatus": "Verified"
+    },
+    "charts": {
+      "radar": [
+        { "subject": "Mechanics", "score": 100, "fullMark": 100 },
+        { "subject": "Optics", "score": 95, "fullMark": 100 },
+        { "subject": "Thermodynamics", "score": 100, "fullMark": 100 },
+        { "subject": "Electromagnetism", "score": 90, "fullMark": 100 },
+        { "subject": "Modern Physics", "score": 100, "fullMark": 100 }
+      ],
+      "bar": [
+        { "subject": "Mechanics", "correct": 25, "incorrect": 0 },
+        { "subject": "Optics", "correct": 19, "incorrect": 1 },
+        { "subject": "Thermo", "correct": 20, "incorrect": 0 },
+        { "subject": "Electro", "correct": 18, "incorrect": 1 },
+        { "subject": "Modern", "correct": 16, "incorrect": 0 }
+      ],
+      "donut": [
+        { "name": "Attempted", "value": 100, "color": "#10B981" },
+        { "name": "Unattempted", "value": 0, "color": "#E5E7EB" }
+      ],
+      "line": [
+        { "exam": "Mock 1", "score": 85 },
+        { "exam": "Mock 2", "score": 92 },
+        { "exam": "Midterm", "score": 98 }
+      ]
+    },
+    "correctAnswers": [
+      { "id": 1, "question": "Q1", "selected": "A", "correct": "A", "marks": 1 },
+      { "id": 2, "question": "Q2", "selected": "C", "correct": "C", "marks": 1 },
+      { "id": 3, "question": "Q3", "selected": "B", "correct": "B", "marks": 1 },
+      { "id": 4, "question": "Q4", "selected": "D", "correct": "D", "marks": 1 },
+      { "id": 5, "question": "Q5", "selected": "A", "correct": "A", "marks": 1 }
+    ],
+    "incorrectAnswers": [
+      { "id": 42, "question": "Q42 (Optics)", "selected": "B", "correct": "C", "negativeMarks": -0.25 },
+      { "id": 78, "question": "Q78 (Electro)", "selected": "A", "correct": "D", "negativeMarks": -0.25 }
+    ],
+    "weakAreas": [
+      { "subject": "Electromagnetism", "topic": "Magnetic Induction", "accuracy": 65, "suggestion": "Review Faraday's Law" },
+      { "subject": "Optics", "topic": "Diffraction", "accuracy": 70, "suggestion": "Practice numerical problems" }
+    ],
+    "scanDetails": {
+      "scanTime": "Oct 24, 2026 10:12:45 AM",
+      "scannerStatus": "Success",
+      "evaluationAccuracy": "99.99%",
+      "omrTemplate": "NEET_Format_2026_V2",
+      "cameraResolution": "1920x1080 (FHD)",
+      "processedTime": "1.2s",
+      "lightingCondition": "Optimal",
+      "alignmentSkew": "0.02 deg"
+    },
+    "summary": {
+      "insight": "Excellent Performance",
+      "strongest": "Mechanics & Thermodynamics",
+      "weakest": "Electromagnetism",
+      "recommendation": "Student shows exceptional mastery of core physics concepts. Focus on advanced electromagnetism problems to achieve a perfect score."
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "exams": [
+    {
+      "id": "e1",
+      "name": "NEET Mock Test 1",
+      "type": "NEET",
+      "date": "2026-07-20",
+      "totalStudents": 500,
+      "scanned": 120
+    }
+  ]
+}

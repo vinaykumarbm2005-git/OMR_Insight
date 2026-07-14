@@ -1,0 +1,38 @@
+{
+  "scoreDistData": [
+    { "name": "0-20", "students": 12 },
+    { "name": "21-40", "students": 25 },
+    { "name": "41-60", "students": 45 },
+    { "name": "61-80", "students": 38 },
+    { "name": "81-100", "students": 20 }
+  ],
+  "passFailData": [
+    { "name": "Pass", "value": 78, "color": "#10B981" },
+    { "name": "Fail", "value": 22, "color": "#EF4444" }
+  ],
+  "avgScoreTrendData": [
+    { "month": "Jan", "score": 65 },
+    { "month": "Feb", "score": 68 },
+    { "month": "Mar", "score": 72 },
+    { "month": "Apr", "score": 70 },
+    { "month": "May", "score": 75 }
+  ],
+  "evaluationProgressData": [
+    { "time": "10:00", "evaluated": 0 },
+    { "time": "10:15", "evaluated": 25 },
+    { "time": "10:30", "evaluated": 60 },
+    { "time": "10:45", "evaluated": 100 },
+    { "time": "11:00", "evaluated": 120 }
+  ],
+  "recentActivity": [
+    { "time": "10:15 AM", "title": "Exam Created", "desc": "NEET Mock Test 4 was created.", "icon": "MdCreate", "color": "text-blue-500", "bg": "bg-blue-100" },
+    { "time": "10:20 AM", "title": "Scanner Started", "desc": "Batch scanning initiated.", "icon": "MdDocumentScanner", "color": "text-purple-500", "bg": "bg-purple-100" },
+    { "time": "10:32 AM", "title": "Evaluation Update", "desc": "25 Sheets Evaluated.", "icon": "MdFactCheck", "color": "text-orange-500", "bg": "bg-orange-100" },
+    { "time": "10:45 AM", "title": "Results Generated", "desc": "Results ready for NEET Mock.", "icon": "MdAssessment", "color": "text-green-500", "bg": "bg-green-100" }
+  ],
+  "recentExams": [
+    { "id": 1, "name": "NEET Mock Test 4", "type": "NEET", "students": 150, "status": "Completed", "date": "Oct 24, 2026" },
+    { "id": 2, "name": "Midterm Physics", "type": "College", "students": 85, "status": "Evaluating", "date": "Oct 23, 2026" },
+    { "id": 3, "name": "JEE Advanced Prep", "type": "JEE", "students": 200, "status": "Pending", "date": "Oct 25, 2026" }
+  ]
+}
