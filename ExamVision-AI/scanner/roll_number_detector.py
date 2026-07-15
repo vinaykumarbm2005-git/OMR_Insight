@@ -1,9 +1,11 @@
 import cv2
+import numpy as np
 from scanner.template_loader import load_template
 
 # =====================================
 # Load Warped OMR Image
 # =====================================
+
 image = cv2.imread("images/warped_omr.jpg")
 
 if image is None:
@@ -13,6 +15,7 @@ if image is None:
 # =====================================
 # Load Template
 # =====================================
+
 template = load_template("KCET")
 region = template["roll_number_region"]
 
@@ -29,56 +32,92 @@ print(f"x={x}, y={y}, width={w}, height={h}")
 print(f"Digits={digits}, Rows={rows}")
 
 # =====================================
-# Crop Roll Number Region
+# Crop Roll Number Area
 # =====================================
+
 roll_region = image[y:y+h, x:x+w]
 
 # =====================================
-# Convert to Grayscale
+# Preprocess Image
 # =====================================
+
 gray = cv2.cvtColor(
     roll_region,
     cv2.COLOR_BGR2GRAY
 )
 
-# =====================================
-# Calculate Grid Cell Size
-# =====================================
-column_width = w // digits
-row_height = h // rows
+gray = cv2.GaussianBlur(
+    gray,
+    (5,5),
+    0
+)
+
+binary = cv2.adaptiveThreshold(
+    gray,
+    255,
+    cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+    cv2.THRESH_BINARY_INV,
+    21,
+    10
+)
 
 # =====================================
-# Draw Grid
+# Grid Information
 # =====================================
+
+column_width = w / digits
+row_height = h / rows
+
 display = roll_region.copy()
 
-# Vertical Lines
-for i in range(digits + 1):
-    x_pos = i * column_width
+roll_number = ""
 
-    cv2.line(
-        display,
-        (x_pos, 0),
-        (x_pos, h),
-        (0, 255, 0),
-        2
-    )
+# =====================================
+# Process Each Column
+# =====================================
 
-# Horizontal Lines
-for i in range(rows + 1):
-    y_pos = i * row_height
+for col in range(digits):
 
-    cv2.line(
-        display,
-        (0, y_pos),
-        (w, y_pos),
-        (255, 0, 0),
-        2
-    )
+    max_pixels = 0
+    selected_digit = -1
+
+    for row in range(rows):
+
+        x1 = int(col * column_width)
+        x2 = int((col + 1) * column_width)
+
+        y1 = int(row * row_height)
+        y2 = int((row + 1) * row_height)
+
+        cell = binary[y1:y2, x1:x2]
+
+        filled_pixels = cv2.countNonZero(cell)
+
+        if filled_pixels > max_pixels:
+            max_pixels = filled_pixels
+            selected_digit = row
+
+        # Draw Debug Grid
+        cv2.rectangle(
+            display,
+            (x1, y1),
+            (x2, y2),
+            (0,255,0),
+            1
+        )
+
+    if selected_digit == -1:
+        roll_number += "_"
+    else:
+        roll_number += str(selected_digit)
+
+print("\nDetected Roll Number:")
+print(roll_number)
 
 # =====================================
 # Save Debug Image
 # =====================================
+
 cv2.imwrite(
     "images/roll_grid_debug.jpg",
     display
@@ -87,9 +126,15 @@ cv2.imwrite(
 # =====================================
 # Display Result
 # =====================================
+
 cv2.imshow(
     "Roll Number Grid",
-    cv2.resize(display, (400, 700))
+    cv2.resize(display, (400,700))
+)
+
+cv2.imshow(
+    "Binary",
+    cv2.resize(binary, (400,700))
 )
 
 cv2.waitKey(0)
