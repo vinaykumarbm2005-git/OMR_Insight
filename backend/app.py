@@ -12,7 +12,7 @@ from routes.student_routes import student_bp
 from routes.result_routes import result_bp
 from routes.auth_routes import auth_bp
 from routes.scanner_routes import scanner_bp
-
+from routes.analytics_routes import analytics_bp
 
 def create_app():
 
@@ -56,6 +56,11 @@ def create_app():
     app.register_blueprint(
     scanner_bp,
     url_prefix="/api/v1/scanner"
+)
+    
+    app.register_blueprint(
+    analytics_bp,
+    url_prefix="/api/v1/analytics"
 )
 
     with app.app_context():

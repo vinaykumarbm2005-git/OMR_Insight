@@ -17,11 +17,12 @@ def evaluate_student(exam_id, student_id, responses):
     if not student:
         return None, "Student not found"
 
-    answer_keys = AnswerKey.query.filter_by(
-        exam_id=exam_id
-    ).order_by(
-        AnswerKey.question_number
-    ).all()
+    answer_keys = (
+        AnswerKey.query
+        .filter_by(exam_id=exam_id)
+        .order_by(AnswerKey.question_number)
+        .all()
+    )
 
     if not answer_keys:
         return None, "Answer Key not uploaded"
@@ -46,21 +47,30 @@ def evaluate_student(exam_id, student_id, responses):
         else:
             incorrect += 1
 
-    score = (
-        correct -
-        (incorrect * exam.negative_marking)
-    )
+    score = correct - (incorrect * exam.negative_marking)
 
-    result = Result(
+    # Check if result already exists
+    result = Result.query.filter_by(
         exam_id=exam_id,
-        student_id=student_id,
-        score=score,
-        correct_answers=correct,
-        incorrect_answers=incorrect,
-        unattempted_questions=unattempted
-    )
+        student_id=student_id
+    ).first()
 
-    db.session.add(result)
+    if result:
+        result.score = score
+        result.correct_answers = correct
+        result.incorrect_answers = incorrect
+        result.unattempted_questions = unattempted
+    else:
+        result = Result(
+            exam_id=exam_id,
+            student_id=student_id,
+            score=score,
+            correct_answers=correct,
+            incorrect_answers=incorrect,
+            unattempted_questions=unattempted
+        )
+        db.session.add(result)
+
     db.session.commit()
 
     return result, None
