@@ -3,7 +3,8 @@ from flask import Blueprint
 from controllers.student_controller import (
     add_student,
     fetch_students,
-    fetch_student
+    fetch_student,
+    student_report
 )
 
 student_bp = Blueprint(
@@ -25,3 +26,8 @@ student_bp.route(
     "/<int:student_id>",
     methods=["GET"]
 )(fetch_student)
+
+student_bp.route(
+    "/<int:student_id>/report",
+    methods=["GET"]
+)(student_report)

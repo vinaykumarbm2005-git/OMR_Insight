@@ -1,6 +1,7 @@
 from flask import request, jsonify
 
 from services.evaluation_service import evaluate_student
+from services.result_service import get_exam_results
 
 
 def evaluate():
@@ -41,4 +42,25 @@ def evaluate():
             "incorrect_answers": result.incorrect_answers,
             "unattempted_questions": result.unattempted_questions
         }
+    })
+
+
+def fetch_exam_results(exam_id):
+
+    results = get_exam_results(exam_id)
+
+    return jsonify({
+        "success": True,
+        "data": [
+            {
+                "student_id": r.student.id,
+                "student_name": r.student.name,
+                "roll_number": r.student.roll_number,
+                "score": r.score,
+                "correct_answers": r.correct_answers,
+                "incorrect_answers": r.incorrect_answers,
+                "unattempted_questions": r.unattempted_questions
+            }
+            for r in results
+        ]
     })
