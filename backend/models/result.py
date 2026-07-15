@@ -8,11 +8,16 @@ class Result(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
+    exam_id = db.Column(
+        db.Integer,
+        db.ForeignKey("exams.id"),
+        nullable=False
+    )
+
     student_id = db.Column(
         db.Integer,
         db.ForeignKey("students.id"),
-        nullable=False,
-        unique=True
+        nullable=False
     )
 
     score = db.Column(
@@ -44,13 +49,15 @@ class Result(db.Model):
         default=datetime.utcnow
     )
 
+    exam = db.relationship(
+        "Exam",
+        backref="results"
+    )
+
     student = db.relationship(
         "Student",
-        backref=db.backref(
-            "result",
-            uselist=False
-        )
+        backref="results"
     )
 
     def __repr__(self):
-        return f"<Result Student {self.student_id}>"
+        return f"<Result Exam {self.exam_id} Student {self.student_id}>"
