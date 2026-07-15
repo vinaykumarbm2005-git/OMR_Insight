@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { PageHeader } from '../components/common/PageHeader';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -6,6 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Table } from '../components/ui/Table';
 import scannerData from '../data/scanner.json';
+import { getExamById } from '../services/scannerService';
 import { 
   MdOutlineVideocam, MdPlayArrow, MdPause, MdStop, MdRefresh,
   MdCheckCircle, MdInfoOutline, MdCheckCircleOutline,
@@ -14,18 +16,23 @@ import {
 import { cn } from '../components/ui/Button';
 
 const Scanner = () => {
+  const location = useLocation();
+
   // Scanner States: 'waiting' | 'scanning' | 'paused' | 'completed' | 'stopped'
   const [scannerState, setScannerState] = useState('waiting');
   
   // Progress State
   const [scannedCount, setScannedCount] = useState(0);
   const [currentStudent, setCurrentStudent] = useState(null);
+  const [examDetails, setExamDetails] = useState(null);
   
   // Logs & Activity
   const [logs, setLogs] = useState(scannerData.logs);
   const [recentActivity, setRecentActivity] = useState([]);
   
-  const totalStudents = scannerData.examInfo.totalStudents;
+  const navigationState = location.state || {};
+  const examId = location.state?.examId || localStorage.getItem('currentExamId');
+  const totalStudents = Math.max(Number(examDetails?.totalStudents ?? navigationState.totalStudents ?? scannerData.examInfo.totalStudents) || 0, 1);
   const progressPercentage = Math.round((scannedCount / totalStudents) * 100);
   
   const logsEndRef = useRef(null);
@@ -36,6 +43,33 @@ const Scanner = () => {
       logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [logs]);
+
+  useEffect(() => {
+    const loadExamDetails = async () => {
+      if (!examId) {
+        return;
+      }
+
+      try {
+        const backendExam = await getExamById(examId);
+        setExamDetails({
+          ...backendExam,
+          totalStudents: navigationState.totalStudents || scannerData.examInfo.totalStudents,
+        });
+      } catch (error) {
+        console.error('Unable to load exam details from backend:', error);
+        setExamDetails({
+          id: examId,
+          title: navigationState.title || scannerData.examInfo.name,
+          exam_type: navigationState.examType || scannerData.examInfo.type,
+          total_questions: navigationState.totalQuestions || scannerData.examInfo.questions,
+          totalStudents: navigationState.totalStudents || scannerData.examInfo.totalStudents,
+        });
+      }
+    };
+
+    loadExamDetails();
+  }, [examId, navigationState.title, navigationState.examType, navigationState.totalQuestions, navigationState.totalStudents]);
 
   // Simulation Logic
   useEffect(() => {
@@ -128,7 +162,15 @@ const Scanner = () => {
     { header: 'Time', accessor: 'time', className: 'text-right', cellClassName: 'text-right text-gray-500' },
   ];
 
-  const { examInfo, config } = scannerData;
+  const { config } = scannerData;
+  const examInfo = {
+    name: examDetails?.title || navigationState.title || scannerData.examInfo.name,
+    type: examDetails?.exam_type || navigationState.examType || scannerData.examInfo.type,
+    totalStudents,
+    questions: examDetails?.total_questions || navigationState.totalQuestions || scannerData.examInfo.questions,
+    scannerMode: 'Live',
+    startedTime: new Date().toLocaleString(),
+  };
 
   return (
     <div className="max-w-7xl mx-auto pb-10 flex flex-col h-[calc(100vh-64px)]">
