@@ -7,6 +7,7 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Button } from '../components/ui/Button';
 import { createExam, uploadAnswerKey } from '../services/examService';
+import { studentService } from '../services/studentService';
 import { 
   MdPeopleOutline, MdCheckCircle, MdCloudUpload, 
   MdFactCheck, MdOutlineLibraryBooks, MdOutlineCheck
@@ -28,6 +29,57 @@ const CreateExam = () => {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [statusType, setStatusType] = useState('idle');
   const [statusMessage, setStatusMessage] = useState('');
+  const [activeExamId, setActiveExamId] = useState('');
+  const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState('');
+  const [studentFormData, setStudentFormData] = useState({ name: '', roll_number: '' });
+  const [studentFormError, setStudentFormError] = useState('');
+  const [studentFormSuccess, setStudentFormSuccess] = useState('');
+  const [submittingStudent, setSubmittingStudent] = useState(false);
+
+  useEffect(() => {
+    const storedExamId = localStorage.getItem('currentExamId');
+    if (storedExamId) {
+      setActiveExamId(String(storedExamId));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!activeExamId) {
+      setStudents([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchStudents = async () => {
+      try {
+        setStudentsLoading(true);
+        setStudentsError('');
+        const response = await studentService.getStudents();
+
+        if (isMounted) {
+          const studentList = Array.isArray(response?.data) ? response.data : [];
+          setStudents(studentList.filter(student => String(student.exam_id) === String(activeExamId)));
+        }
+      } catch (error) {
+        if (isMounted) {
+          setStudentsError('Unable to load students for this exam.');
+        }
+      } finally {
+        if (isMounted) {
+          setStudentsLoading(false);
+        }
+      }
+    };
+
+    fetchStudents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeExamId]);
 
   useEffect(() => {
     const requiredFields = [
@@ -201,6 +253,65 @@ const CreateExam = () => {
     setTotalQuestions(0);
     setStatusType('idle');
     setStatusMessage('');
+    setStudentFormData({ name: '', roll_number: '' });
+    setStudentFormError('');
+    setStudentFormSuccess('');
+  };
+
+  const handleStudentInputChange = (e) => {
+    const { name, value } = e.target;
+    setStudentFormData(prev => ({ ...prev, [name]: value }));
+    if (studentFormError) {
+      setStudentFormError('');
+    }
+    if (studentFormSuccess) {
+      setStudentFormSuccess('');
+    }
+  };
+
+  const handleAddStudent = async (e) => {
+    e.preventDefault();
+
+    if (!activeExamId) {
+      setStudentFormError('Create or select an exam before adding students.');
+      return;
+    }
+
+    const trimmedName = studentFormData.name.trim();
+    const trimmedRollNumber = studentFormData.roll_number.trim();
+
+    if (!trimmedName || !trimmedRollNumber) {
+      setStudentFormError('Please enter both student name and roll number.');
+      return;
+    }
+
+    try {
+      setSubmittingStudent(true);
+      setStudentFormError('');
+      setStudentFormSuccess('');
+
+      const response = await studentService.createStudent({
+        name: trimmedName,
+        roll_number: trimmedRollNumber,
+        exam_id: Number(activeExamId),
+      });
+
+      if (response?.success) {
+        setStudentFormSuccess('Student added successfully.');
+        setStudentFormData({ name: '', roll_number: '' });
+
+        const refreshed = await studentService.getStudents();
+        const studentList = Array.isArray(refreshed?.data) ? refreshed.data : [];
+        setStudents(studentList.filter(student => String(student.exam_id) === String(activeExamId)));
+      } else {
+        setStudentFormError(response?.message || 'Unable to add student.');
+      }
+    } catch (error) {
+      const backendMessage = error?.response?.data?.message || 'Unable to add student.';
+      setStudentFormError(backendMessage);
+    } finally {
+      setSubmittingStudent(false);
+    }
   };
 
   const handleStartCamera = async () => {
@@ -235,6 +346,7 @@ const CreateExam = () => {
       }
 
       localStorage.setItem('currentExamId', String(examId));
+      setActiveExamId(String(examId));
 
       console.log('[CreateExamPage] Calling uploadAnswerKey with examId:', examId, 'file:', answerKeyFile);
       console.log('[CreateExamPage] uploadAnswerKey file is File instance:', answerKeyFile instanceof File);
@@ -383,6 +495,60 @@ const CreateExam = () => {
               </div>
             </CardContent>
           </Card>
+
+          {activeExamId && (
+            <Card>
+              <CardContent className="p-6 sm:p-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-2 border-b border-gray-100 pb-4 flex items-center">
+                  <MdPeopleOutline className="mr-2 text-primary" /> Manage Students
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">Add students for the current exam before starting the scanner.</p>
+
+                <form onSubmit={handleAddStudent} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3">
+                  <Input
+                    name="name"
+                    value={studentFormData.name}
+                    onChange={handleStudentInputChange}
+                    placeholder="Student Name"
+                    className="h-12 bg-gray-50/50"
+                  />
+                  <Input
+                    name="roll_number"
+                    value={studentFormData.roll_number}
+                    onChange={handleStudentInputChange}
+                    placeholder="Roll Number"
+                    className="h-12 bg-gray-50/50"
+                  />
+                  <Button type="submit" variant="primary" disabled={submittingStudent} className="h-12 whitespace-nowrap">
+                    {submittingStudent ? 'Adding...' : 'Add Student'}
+                  </Button>
+                </form>
+
+                {studentFormError && <p className="mt-3 text-sm text-red-600">{studentFormError}</p>}
+                {studentFormSuccess && <p className="mt-3 text-sm text-green-600">{studentFormSuccess}</p>}
+
+                <div className="mt-6 border-t border-gray-100 pt-4">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Students for this exam</h4>
+                  {studentsLoading ? (
+                    <p className="text-sm text-gray-500">Loading students...</p>
+                  ) : studentsError ? (
+                    <p className="text-sm text-red-600">{studentsError}</p>
+                  ) : students.length > 0 ? (
+                    <ul className="space-y-2">
+                      {students.map(student => (
+                        <li key={student.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                          <span className="font-medium text-gray-900">{student.name}</span>
+                          <span className="text-gray-500">{student.roll_number}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-500">No students have been added for this exam yet.</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end space-x-4 pt-4">

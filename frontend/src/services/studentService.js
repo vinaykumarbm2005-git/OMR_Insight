@@ -1,15 +1,13 @@
-export const getStudent = async (id) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ id, name: 'John Doe', rollNumber: '101' });
-    }, 500);
-  });
-};
+import api from './api';
 
-export const getStudents = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([]);
-    }, 500);
-  });
+export const studentService = {
+  createStudent: async (studentData) => {
+    const response = await api.post('/students/', studentData);
+    return response.data;
+  },
+
+  getStudents: async () => {
+    const response = await api.get('/students/');
+    return response.data;
+  },
 };
