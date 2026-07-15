@@ -2,5 +2,19 @@
     "exam_type": "KCET",
     "total_questions": 240,
     "options_per_question": 4,
-    "roll_number_digits": 6
+    "roll_number_digits": 6,
+
+    "roll_number_region": {
+        "x": 82,
+        "y": 150,
+        "width": 85,
+        "height": 185,
+        "digits": 5,
+        "rows": 10,
+
+        "left_margin": 2,
+        "right_margin": 2,
+        "top_margin": 15,
+        "bottom_margin": 4
+    }
 }

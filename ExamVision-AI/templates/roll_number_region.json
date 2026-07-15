@@ -4,5 +4,11 @@
     "width": 85,
     "height": 185,
     "digits": 5,
-    "rows": 10
+    "rows": 10,
+
+    "left_margin": 2,
+    "right_margin": 2,
+
+    "top_margin": 15,
+    "bottom_margin": 4
 }

@@ -58,18 +58,18 @@ binary = cv2.adaptiveThreshold(
     cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
     cv2.THRESH_BINARY_INV,
     21,
-    10
+    12
 )
 
 # =====================================
 # Grid Information (Improved Alignment)
 # =====================================
 
-left_margin = 2
-right_margin = 2
+left_margin = region["left_margin"]
+right_margin = region["right_margin"]
 
-top_margin = 15
-bottom_margin = 4
+top_margin = region["top_margin"]
+bottom_margin = region["bottom_margin"]
 
 usable_width = w - left_margin - right_margin
 usable_height = h - top_margin - bottom_margin
