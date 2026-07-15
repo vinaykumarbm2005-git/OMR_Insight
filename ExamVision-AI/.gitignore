@@ -13,10 +13,6 @@ env/
 # VS Code settings
 .vscode/
 
-# Generated files
-captured_omr.jpg
-images/grayscale_omr.jpg
-
 # Logs
 *.log
 
@@ -25,8 +21,11 @@ images/grayscale_omr.jpg
 Thumbs.db
 
 # Generated images
+images/block_*.jpg
 images/grayscale_omr.jpg
 images/blurred_omr.jpg
 images/edges_omr.jpg
 images/warped_omr.jpg
 captured_omr.jpg
+images/detected_sheet_corners.jpg
+images/roll_grid_debug.jpg

@@ -121,6 +121,22 @@ print(
 )
 
 # =====================================
+# Save Each Block
+# =====================================
+
+for i, (x, y, w, h) in enumerate(question_blocks):
+
+    block_image = answer_region[
+        y:y+h,
+        x:x+w
+    ]
+
+    cv2.imwrite(
+        f"images/block_{i+1}.jpg",
+        block_image
+    )
+
+# =====================================
 # Display Result
 # =====================================
 
