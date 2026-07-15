@@ -5,6 +5,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Checkbox } from '../components/ui/Checkbox';
 import { Loader } from '../components/ui/Loader';
+import { Badge } from '../components/ui/Badge';
+import { cn } from '../components/ui/Button';
 import { MdDocumentScanner, MdTrendingUp, MdSecurity } from 'react-icons/md';
 
 const Login = () => {

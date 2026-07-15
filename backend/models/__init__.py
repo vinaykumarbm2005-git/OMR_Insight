@@ -1,9 +1,11 @@
 from .exam import Exam
 from .answer_key import AnswerKey
-from .omr_submission import OMRSubmission
+from .student import Student
+from .result import Result
 
 __all__ = [
     "Exam",
     "AnswerKey",
-    "OMRSubmission"
+    "Student",
+    "Result"
 ]

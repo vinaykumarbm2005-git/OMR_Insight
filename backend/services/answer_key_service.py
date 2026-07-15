@@ -1,42 +1,53 @@
-from models.answer_key import AnswerKey
-from models.exam import Exam
+import csv
+from io import StringIO
+
 from extensions import db
+from models.exam import Exam
+from models.answer_key import AnswerKey
 
 
-def create_answer_key(exam_id, answers):
+def upload_answer_key(exam_id, csv_file):
+
     exam = Exam.query.get(exam_id)
 
     if not exam:
-        return None, "Exam not found"
+        return False, "Exam not found"
 
-    existing = AnswerKey.query.filter_by(exam_id=exam_id).first()
+    if csv_file is None:
+        return False, "CSV file is required"
 
-    if existing:
-        return None, "Answer key already exists"
+    # Remove existing answer key for this exam
+    AnswerKey.query.filter_by(exam_id=exam_id).delete()
 
-    answer_key = AnswerKey(
-        exam_id=exam_id,
-        answers=answers
-    )
+    stream = StringIO(csv_file.stream.read().decode("utf-8"))
+    reader = csv.DictReader(stream)
 
-    db.session.add(answer_key)
+    required_columns = [
+        "question_number",
+        "correct_answer",
+        "chapter",
+        "concept"
+    ]
+
+    if reader.fieldnames is None:
+        return False, "Invalid CSV file"
+
+    for column in required_columns:
+        if column not in reader.fieldnames:
+            return False, f"Missing column: {column}"
+
+    for row in reader:
+
+        answer = AnswerKey(
+            exam_id=exam_id,
+            question_number=int(row["question_number"]),
+            correct_answer=row["correct_answer"].strip().upper(),
+            chapter=row["chapter"].strip(),
+            concept=row["concept"].strip()
+        )
+
+        db.session.add(answer)
+
     db.session.commit()
 
-    return answer_key, None
-
-
-def get_answer_key(exam_id):
-    return AnswerKey.query.filter_by(exam_id=exam_id).first()
-
-
-def update_answer_key(exam_id, answers):
-    answer_key = AnswerKey.query.filter_by(exam_id=exam_id).first()
-
-    if not answer_key:
-        return None
-
-    answer_key.answers = answers
-
-    db.session.commit()
-
-    return answer_key
+    return True, "Answer Key Uploaded Successfully"
