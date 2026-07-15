@@ -51,6 +51,13 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [recentExams, setRecentExams] = useState([]);
+  const [recentExamsLoading, setRecentExamsLoading] = useState(true);
+  const [recentExamsError, setRecentExamsError] = useState('');
+  const [selectedExamId, setSelectedExamId] = useState(null);
+  const [examSummary, setExamSummary] = useState(null);
+  const [examSummaryLoading, setExamSummaryLoading] = useState(true);
+  const [examSummaryError, setExamSummaryError] = useState('');
   
   // Date formatting
   const today = new Date();
@@ -87,6 +94,82 @@ const Dashboard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchRecentExams = async () => {
+      try {
+        setRecentExamsLoading(true);
+        setRecentExamsError('');
+        const response = await analyticsService.getExams();
+
+        if (isMounted) {
+          const exams = Array.isArray(response) ? response : response?.data || [];
+          const sortedExams = [...exams].sort((a, b) => b.id - a.id);
+          setRecentExams(sortedExams);
+
+          if (sortedExams.length > 0) {
+            setSelectedExamId((current) => current || sortedExams[0].id);
+          } else {
+            setSelectedExamId(null);
+            setExamSummary(null);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setRecentExamsError('Unable to load recent examinations.');
+        }
+      } finally {
+        if (isMounted) {
+          setRecentExamsLoading(false);
+        }
+      }
+    };
+
+    fetchRecentExams();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchExamSummary = async () => {
+      if (!selectedExamId) {
+        setExamSummary(null);
+        setExamSummaryLoading(false);
+        setExamSummaryError('');
+        return;
+      }
+
+      try {
+        setExamSummaryLoading(true);
+        setExamSummaryError('');
+        const response = await analyticsService.getExamSummary(selectedExamId);
+
+        if (isMounted) {
+          setExamSummary(response?.data || null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setExamSummaryError('Unable to load exam summary.');
+        }
+      } finally {
+        if (isMounted) {
+          setExamSummaryLoading(false);
+        }
+      }
+    };
+
+    fetchExamSummary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedExamId]);
+
   const stats = dashboardData || {
     total_exams: 0,
     total_students: 0,
@@ -100,7 +183,6 @@ const Dashboard = () => {
   const passFailData = [];
   const avgScoreTrendData = [];
   const recentActivity = [];
-  const recentExams = [];
   const hasChartData = scoreDistData.length > 0 || passFailData.length > 0 || avgScoreTrendData.length > 0;
 
   return (
@@ -288,33 +370,55 @@ const Dashboard = () => {
               View All
             </Button>
           </div>
+          <div className="p-4 border-b border-border bg-gray-50/50">
+            {recentExamsError ? (
+              <div className="text-sm text-red-600">{recentExamsError}</div>
+            ) : examSummaryLoading ? (
+              <div className="text-sm text-gray-600">Loading exam summary...</div>
+            ) : examSummaryError ? (
+              <div className="text-sm text-red-600">{examSummaryError}</div>
+            ) : examSummary ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div><span className="text-gray-500">Exam Title</span><div className="font-medium text-gray-900">{examSummary.exam_title}</div></div>
+                <div><span className="text-gray-500">Students Appeared</span><div className="font-medium text-gray-900">{examSummary.students_appeared}</div></div>
+                <div><span className="text-gray-500">Average Score</span><div className="font-medium text-gray-900">{examSummary.average_score}</div></div>
+                <div><span className="text-gray-500">Highest Score</span><div className="font-medium text-gray-900">{examSummary.highest_score}</div></div>
+                <div><span className="text-gray-500">Lowest Score</span><div className="font-medium text-gray-900">{examSummary.lowest_score}</div></div>
+                <div><span className="text-gray-500">Pass Percentage</span><div className="font-medium text-gray-900">{examSummary.pass_percentage}%</div></div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-600">Select an exam to view the summary.</div>
+            )}
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="text-xs text-gray-500 uppercase bg-gray-50/50 border-b border-border">
                 <tr>
                   <th scope="col" className="px-6 py-4 font-medium">Exam Name</th>
                   <th scope="col" className="px-6 py-4 font-medium">Type</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Students</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Date</th>
-                  <th scope="col" className="px-6 py-4 font-medium">Status</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Questions</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Marks</th>
+                  <th scope="col" className="px-6 py-4 font-medium">Set</th>
                   <th scope="col" className="px-6 py-4 font-medium text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {recentExams.length > 0 ? (
+                {recentExamsLoading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center text-sm text-gray-500">Loading recent examinations...</td>
+                  </tr>
+                ) : recentExams.length > 0 ? (
                   recentExams.map((exam) => (
                     <tr key={exam.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900">{exam.name}</td>
-                      <td className="px-6 py-4"><Badge variant="default">{exam.type}</Badge></td>
-                      <td className="px-6 py-4 text-gray-600">{exam.students}</td>
-                      <td className="px-6 py-4 text-gray-600">{exam.date}</td>
-                      <td className="px-6 py-4">
-                        <Badge variant={exam.status === 'Completed' ? 'success' : exam.status === 'Evaluating' ? 'warning' : 'default'}>
-                          {exam.status}
-                        </Badge>
-                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-900">{exam.title}</td>
+                      <td className="px-6 py-4"><Badge variant="default">{exam.exam_type}</Badge></td>
+                      <td className="px-6 py-4 text-gray-600">{exam.total_questions}</td>
+                      <td className="px-6 py-4 text-gray-600">{exam.total_marks}</td>
+                      <td className="px-6 py-4 text-gray-600">{exam.exam_set}</td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-primary hover:text-blue-700 font-medium transition-colors">View</button>
+                        <button className="text-primary hover:text-blue-700 font-medium transition-colors" onClick={() => setSelectedExamId(exam.id)}>
+                          View
+                        </button>
                       </td>
                     </tr>
                   ))
