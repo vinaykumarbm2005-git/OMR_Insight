@@ -10,6 +10,8 @@ from routes.exam_routes import exam_bp
 from routes.answer_key_routes import answer_key_bp
 from routes.student_routes import student_bp
 from routes.result_routes import result_bp
+from routes.auth_routes import auth_bp
+from routes.scanner_routes import scanner_bp
 
 
 def create_app():
@@ -22,27 +24,38 @@ def create_app():
 
     db.init_app(app)
 
-    # Exam Routes
+    # ==========================
+    # API Version 1 Routes
+    # ==========================
+
     app.register_blueprint(
         exam_bp,
-        url_prefix="/api/exams"
+        url_prefix="/api/v1/exams"
     )
 
-    # Answer Key Routes
     app.register_blueprint(
         answer_key_bp,
-        url_prefix="/api/exams"
+        url_prefix="/api/v1/exams"
     )
 
-    # Student Routes
     app.register_blueprint(
         student_bp,
-        url_prefix="/api/students"
+        url_prefix="/api/v1/students"
     )
 
     app.register_blueprint(
-    result_bp,
-    url_prefix="/api/results"
+        result_bp,
+        url_prefix="/api/v1/results"
+    )
+
+    app.register_blueprint(
+    auth_bp,
+    url_prefix="/api/v1/auth"
+)
+    
+    app.register_blueprint(
+    scanner_bp,
+    url_prefix="/api/v1/scanner"
 )
 
     with app.app_context():
@@ -61,4 +74,6 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        debug=True
+    )
