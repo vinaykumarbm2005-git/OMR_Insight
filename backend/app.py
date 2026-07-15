@@ -3,6 +3,7 @@ from flask_cors import CORS
 
 from config import Config
 from extensions import db
+from flasgger import Swagger
 
 from models import *
 
@@ -17,12 +18,17 @@ from routes.analytics_routes import analytics_bp
 def create_app():
 
     app = Flask(__name__)
+    app.config["SWAGGER"] = {
+    "title": "OMR Insight API",
+    "uiversion": 3
+}
 
     app.config.from_object(Config)
 
     CORS(app)
 
     db.init_app(app)
+    Swagger(app)
 
     # ==========================
     # API Version 1 Routes

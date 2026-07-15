@@ -7,13 +7,14 @@ import { Checkbox } from '../components/ui/Checkbox';
 import { Loader } from '../components/ui/Loader';
 import { Badge } from '../components/ui/Badge';
 import { cn } from '../components/ui/Button';
+import { authService } from '../services/authService';
 import { MdDocumentScanner, MdTrendingUp, MdSecurity } from 'react-icons/md';
 
 const Login = () => {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    email: 'admin@examvision.ai',
+    username: 'admin',
     password: 'password123',
     rememberMe: false
   });
@@ -23,10 +24,8 @@ const Login = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    if (!formData.username) {
+      newErrors.username = 'Username is required';
     }
     
     if (!formData.password) {
@@ -58,10 +57,18 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      navigate(ROUTES.DASHBOARD);
+      const response = await authService.login({
+        username: formData.username,
+        password: formData.password
+      });
+      
+      if (response.success) {
+        navigate(ROUTES.DASHBOARD);
+      } else {
+        setErrors({ form: response.message || 'Login failed. Please try again.' });
+      }
     } catch (error) {
-      setErrors({ form: 'An error occurred during login. Please try again.' });
+      setErrors({ form: error.message || 'An error occurred during login. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -162,24 +169,24 @@ const Login = () => {
 
           <form onSubmit={handleLogin} className="space-y-6" noValidate>
             <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-900">
-                Email Address
+              <label htmlFor="username" className="block text-sm font-semibold text-gray-900">
+                Username
               </label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="admin@examvision.ai"
-                value={formData.email}
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Enter username"
+                value={formData.username}
                 onChange={handleInputChange}
                 className={cn(
                   "h-12 bg-gray-50/50",
-                  errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''
+                  errors.username ? 'border-red-500 focus-visible:ring-red-500' : ''
                 )}
-                aria-invalid={!!errors.email}
+                aria-invalid={!!errors.username}
                 disabled={isLoading}
               />
-              {errors.email && <p className="text-xs text-red-500 font-medium mt-1">{errors.email}</p>}
+              {errors.username && <p className="text-xs text-red-500 font-medium mt-1">{errors.username}</p>}
             </div>
 
             <div className="space-y-2">

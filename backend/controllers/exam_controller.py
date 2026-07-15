@@ -5,32 +5,65 @@ from models.exam import Exam
 
 
 def create_exam():
+
     data = request.get_json()
 
-    required_fields = [
-        "title",
-        "exam_type",
-        "template_type",
-        "exam_set",
-        "total_questions",
-        "total_marks"
-    ]
+    if not data:
+        return jsonify({
+            "success": False,
+            "message": "Request body is required"
+        }), 400
 
-    for field in required_fields:
-        if field not in data:
-            return jsonify({
-                "success": False,
-                "message": f"{field} is required"
-            }), 400
+    # Required for both old and new API formats
+    if "exam_type" not in data:
+        return jsonify({
+            "success": False,
+            "message": "exam_type is required"
+        }), 400
+
+    if "total_questions" not in data:
+        return jsonify({
+            "success": False,
+            "message": "total_questions is required"
+        }), 400
+
+    exam_type = data["exam_type"]
+    total_questions = int(data["total_questions"])
+
+    # Backward-compatible defaults
+    title = data.get(
+        "title",
+        f"{exam_type} Examination"
+    )
+
+    template_type = data.get(
+        "template_type",
+        exam_type
+    )
+
+    exam_set = data.get(
+        "exam_set",
+        "A"
+    )
+
+    total_marks = data.get(
+        "total_marks",
+        total_questions
+    )
+
+    negative_marking = data.get(
+        "negative_marking",
+        0.0
+    )
 
     exam = Exam(
-        title=data["title"],
-        exam_type=data["exam_type"],
-        template_type=data["template_type"],
-        exam_set=data["exam_set"],
-        total_questions=data["total_questions"],
-        total_marks=data["total_marks"],
-        negative_marking=data.get("negative_marking", 0.0)
+        title=title,
+        exam_type=exam_type,
+        template_type=template_type,
+        exam_set=exam_set,
+        total_questions=total_questions,
+        total_marks=total_marks,
+        negative_marking=negative_marking
     )
 
     db.session.add(exam)
@@ -42,6 +75,7 @@ def create_exam():
         "exam_id": exam.id
     }), 201
 
+
 def get_all_exams():
 
     exams = Exam.query.all()
@@ -49,6 +83,7 @@ def get_all_exams():
     result = []
 
     for exam in exams:
+
         result.append({
             "id": exam.id,
             "title": exam.title,
@@ -61,6 +96,7 @@ def get_all_exams():
         })
 
     return jsonify(result)
+
 
 def get_exam(exam_id):
 
