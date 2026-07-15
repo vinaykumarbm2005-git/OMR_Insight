@@ -62,11 +62,20 @@ binary = cv2.adaptiveThreshold(
 )
 
 # =====================================
-# Grid Information
+# Grid Information (Improved Alignment)
 # =====================================
 
-column_width = w / digits
-row_height = h / rows
+left_margin = 2
+right_margin = 2
+
+top_margin = 15
+bottom_margin = 4
+
+usable_width = w - left_margin - right_margin
+usable_height = h - top_margin - bottom_margin
+
+column_width = usable_width / digits
+row_height = usable_height / rows
 
 display = roll_region.copy()
 
@@ -83,11 +92,25 @@ for col in range(digits):
 
     for row in range(rows):
 
-        x1 = int(col * column_width)
-        x2 = int((col + 1) * column_width)
+        x1 = int(
+            left_margin +
+            col * column_width
+        )
 
-        y1 = int(row * row_height)
-        y2 = int((row + 1) * row_height)
+        x2 = int(
+            left_margin +
+            (col + 1) * column_width
+        )
+
+        y1 = int(
+            top_margin +
+            row * row_height
+        )
+
+        y2 = int(
+            top_margin +
+            (row + 1) * row_height
+        )
 
         cell = binary[y1:y2, x1:x2]
 
