@@ -1,20 +1,20 @@
 import cv2
-import json
+from scanner.template_loader import load_template
 
 # =====================================
-# Load Image
+# Load Warped OMR Image
 # =====================================
 image = cv2.imread("images/warped_omr.jpg")
 
 if image is None:
-    print("Image not found!")
+    print("Error: warped_omr.jpg not found!")
     exit()
 
 # =====================================
-# Load Region Coordinates
+# Load Template
 # =====================================
-with open("templates/roll_number_region.json", "r") as file:
-    region = json.load(file)
+template = load_template("KCET")
+region = template["roll_number_region"]
 
 x = region["x"]
 y = region["y"]
@@ -24,19 +24,25 @@ h = region["height"]
 digits = region["digits"]
 rows = region["rows"]
 
+print("Roll Number Region Loaded")
+print(f"x={x}, y={y}, width={w}, height={h}")
+print(f"Digits={digits}, Rows={rows}")
+
 # =====================================
-# Extract Roll Number Area
+# Crop Roll Number Region
 # =====================================
 roll_region = image[y:y+h, x:x+w]
 
-# Convert to grayscale
+# =====================================
+# Convert to Grayscale
+# =====================================
 gray = cv2.cvtColor(
     roll_region,
     cv2.COLOR_BGR2GRAY
 )
 
 # =====================================
-# Calculate Cell Size
+# Calculate Grid Cell Size
 # =====================================
 column_width = w // digits
 row_height = h // rows
@@ -46,7 +52,7 @@ row_height = h // rows
 # =====================================
 display = roll_region.copy()
 
-# Vertical lines
+# Vertical Lines
 for i in range(digits + 1):
     x_pos = i * column_width
 
@@ -58,7 +64,7 @@ for i in range(digits + 1):
         2
     )
 
-# Horizontal lines
+# Horizontal Lines
 for i in range(rows + 1):
     y_pos = i * row_height
 
@@ -71,7 +77,15 @@ for i in range(rows + 1):
     )
 
 # =====================================
-# Display
+# Save Debug Image
+# =====================================
+cv2.imwrite(
+    "images/roll_grid_debug.jpg",
+    display
+)
+
+# =====================================
+# Display Result
 # =====================================
 cv2.imshow(
     "Roll Number Grid",
