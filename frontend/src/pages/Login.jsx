@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { Button } from '../components/ui/Button';
@@ -6,17 +6,22 @@ import { Input } from '../components/ui/Input';
 import { Checkbox } from '../components/ui/Checkbox';
 import { Loader } from '../components/ui/Loader';
 import { Badge } from '../components/ui/Badge';
-import { cn } from '../components/ui/Button';
 import { authService } from '../services/authService';
 import { MdDocumentScanner, MdTrendingUp, MdSecurity } from 'react-icons/md';
 
 const Login = () => {
   const navigate = useNavigate();
   
+  useEffect(() => {
+    if (authService.verifyToken()) {
+      navigate(ROUTES.DASHBOARD);
+    }
+  }, [navigate]);
+  
   const [formData, setFormData] = useState({
-    username: 'admin',
-    password: 'password123',
-    rememberMe: false
+    username: localStorage.getItem('rememberedUsername') || 'admin',
+    password: 'admin123',
+    rememberMe: !!localStorage.getItem('rememberedUsername')
   });
   
   const [errors, setErrors] = useState({});
@@ -60,9 +65,14 @@ const Login = () => {
       const response = await authService.login({
         username: formData.username,
         password: formData.password
-      });
+      }, formData.rememberMe);
       
       if (response.success) {
+        if (formData.rememberMe) {
+          localStorage.setItem('rememberedUsername', formData.username);
+        } else {
+          localStorage.removeItem('rememberedUsername');
+        }
         navigate(ROUTES.DASHBOARD);
       } else {
         setErrors({ form: response.message || 'Login failed. Please try again.' });
@@ -194,7 +204,11 @@ const Login = () => {
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-900">
                   Password
                 </label>
-                <a href="#" className="text-sm font-semibold text-primary hover:text-blue-700 transition-colors">
+                <a 
+                  href="#" 
+                  onClick={(e) => { e.preventDefault(); alert('This feature is not available in the current release.'); }}
+                  className="text-sm font-semibold text-primary hover:text-blue-700 transition-colors"
+                >
                   Forgot password?
                 </a>
               </div>

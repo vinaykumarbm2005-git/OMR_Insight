@@ -42,14 +42,14 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, colorClass, loadin
           <Icon className={`text-xl sm:text-2xl ${colorClass.replace('bg-', 'text-')}`} />
         </div>
       </div>
-      <div className="mt-4 flex items-center text-xs sm:text-sm">
+      <div className="mt-4 flex items-center text-xs sm:text-sm text-gray-500">
         {loading ? (
           <SkeletonLoader className="w-24 h-4" />
         ) : (
           <>
-            {trendUp ? <MdTrendingUp className="mr-1 text-green-500" /> : <MdTrendingDown className="mr-1 text-red-500" />}
-            <span className={trendUp ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>{trend}</span>
-            <span className="text-gray-400 ml-2">vs last exam</span>
+            <span className="font-semibold text-primary">Live Data</span>
+            <span className="mx-1.5">•</span>
+            <span>No comparative data available</span>
           </>
         )}
       </div>

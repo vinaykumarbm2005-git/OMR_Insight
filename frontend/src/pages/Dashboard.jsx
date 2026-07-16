@@ -37,10 +37,10 @@ const StatCard = ({ title, value, icon: Icon, trend, trendUp, colorClass }) => (
           <Icon className={`text-2xl ${colorClass.replace('bg-', 'text-')}`} />
         </div>
       </div>
-      <div className="mt-4 flex items-center text-sm">
-        <MdTrendingUp className={`mr-1 ${trendUp ? 'text-green-500' : 'text-red-500 transform rotate-180'}`} />
-        <span className={trendUp ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>{trend}</span>
-        <span className="text-gray-400 ml-2">vs last month</span>
+      <div className="mt-4 flex items-center text-xs text-gray-500">
+        <span className="font-semibold text-primary">Live Data</span>
+        <span className="mx-1.5">•</span>
+        <span>No historical comparison available</span>
       </div>
     </CardContent>
   </Card>
@@ -333,7 +333,12 @@ const Dashboard = () => {
         <Card className="xl:col-span-1 shadow-sm flex flex-col">
           <div className="p-5 border-b border-border flex justify-between items-center">
             <h3 className="font-semibold text-text">Recent Activity</h3>
-            <button className="text-xs text-primary hover:underline">View All</button>
+            <button 
+              onClick={(e) => { e.preventDefault(); alert('This feature is not available in the current release.'); }}
+              className="text-xs text-primary hover:underline"
+            >
+              View All
+            </button>
           </div>
           <CardContent className="p-5 flex-1">
             {recentActivity.length > 0 ? (
@@ -357,7 +362,7 @@ const Dashboard = () => {
                 })}
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-gray-500">No recent activity available.</div>
+              <div className="flex h-full items-center justify-center text-sm text-gray-500">Recent activity will appear here when available.</div>
             )}
           </CardContent>
         </Card>

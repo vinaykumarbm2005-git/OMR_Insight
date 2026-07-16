@@ -95,7 +95,12 @@ const Navbar = () => {
               <div className="absolute right-0 z-10 mt-2 w-80 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-in fade-in zoom-in-95 duration-200">
                 <div className="px-4 py-3 border-b border-border flex justify-between items-center">
                   <p className="text-sm font-semibold text-text">Notifications</p>
-                  <span className="text-xs text-primary font-medium cursor-pointer hover:underline">Mark all as read</span>
+                  <span 
+                    onClick={(e) => { e.preventDefault(); alert('This feature is not available in the current release.'); }}
+                    className="text-xs text-primary font-medium cursor-pointer hover:underline"
+                  >
+                    Mark all as read
+                  </span>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
                   <div className="p-4 flex gap-3 border-b border-border hover:bg-gray-50 transition-colors cursor-pointer">
@@ -110,7 +115,10 @@ const Navbar = () => {
                   </div>
                 </div>
                 <div className="p-2 border-t border-border text-center">
-                  <button className="text-xs font-medium text-primary hover:text-blue-700 p-2 w-full rounded-md hover:bg-blue-50 transition-colors">
+                  <button 
+                    onClick={(e) => { e.preventDefault(); alert('This feature is not available in the current release.'); }}
+                    className="text-xs font-medium text-primary hover:text-blue-700 p-2 w-full rounded-md hover:bg-blue-50 transition-colors"
+                  >
                     View all notifications
                   </button>
                 </div>
@@ -143,13 +151,13 @@ const Navbar = () => {
                   <p className="text-sm font-medium text-text">Admin User</p>
                   <p className="text-xs text-gray-500 truncate mt-0.5">admin@examvision.ai</p>
                 </div>
-                <div className="py-1">
-                  <Link to={ROUTES.DASHBOARD} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
-                    <MdPerson className="mr-3 h-4 w-4 text-gray-400 group-hover:text-primary" /> My Profile
-                  </Link>
-                  <Link to={ROUTES.DASHBOARD} className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
-                    <MdSettings className="mr-3 h-4 w-4 text-gray-400 group-hover:text-primary" /> Account Settings
-                  </Link>
+                 <div className="py-1">
+                  <div className="flex items-center px-4 py-2 text-sm text-gray-400 cursor-not-allowed select-none bg-gray-50/20">
+                    <MdPerson className="mr-3 h-4 w-4 text-gray-300" /> My Profile (N/A)
+                  </div>
+                  <div className="flex items-center px-4 py-2 text-sm text-gray-400 cursor-not-allowed select-none bg-gray-50/20">
+                    <MdSettings className="mr-3 h-4 w-4 text-gray-300" /> Account Settings (N/A)
+                  </div>
                 </div>
                 <div className="py-1 border-t border-border">
                   <button 

@@ -250,11 +250,11 @@ const StudentDetails = () => {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" className="bg-white"><MdChevronLeft className="mr-1" /> Prev</Button>
-          <Button variant="secondary" className="bg-white">Next <MdChevronRight className="ml-1" /></Button>
+          <Button variant="secondary" className="bg-white" onClick={() => alert('This feature is not available in the current release.')}><MdChevronLeft className="mr-1" /> Prev</Button>
+          <Button variant="secondary" className="bg-white" onClick={() => alert('This feature is not available in the current release.')}>Next <MdChevronRight className="ml-1" /></Button>
           <div className="w-px h-6 bg-gray-300 mx-1 hidden sm:block"></div>
-          <Button variant="secondary" className="bg-white"><MdFileDownload className="mr-2 text-primary" /> PDF</Button>
-          <Button variant="secondary" className="bg-white"><MdPrint className="mr-2 text-gray-600" /> Print</Button>
+          <Button variant="secondary" className="bg-white" onClick={() => alert('This feature is not available in the current release.')}><MdFileDownload className="mr-2 text-primary" /> PDF</Button>
+          <Button variant="secondary" className="bg-white" onClick={() => alert('This feature is not available in the current release.')}><MdPrint className="mr-2 text-gray-600" /> Print</Button>
         </div>
       </div>
 

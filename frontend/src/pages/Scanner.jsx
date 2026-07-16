@@ -14,7 +14,6 @@ import {
   MdCheckCircle, MdInfoOutline, MdCheckCircleOutline,
   MdOutlineLibraryBooks, MdPeopleOutline, MdAssessment
 } from 'react-icons/md';
-import { cn } from '../components/ui/Button';
 
 const Scanner = () => {
   const location = useLocation();
@@ -29,7 +28,16 @@ const Scanner = () => {
   const [examDetails, setExamDetails] = useState(null);
   
   // Logs & Activity
-  const [logs, setLogs] = useState(scannerData.logs);
+  const [logs, setLogs] = useState(() => {
+    const timeStr = new Date().toLocaleTimeString();
+    const initialLogs = [{ time: timeStr, event: 'Scanner Initialized. Ready for OMR sheets.' }];
+    const activeExamId = localStorage.getItem('currentExamId');
+    if (activeExamId) {
+      initialLogs.push({ time: timeStr, event: 'Student registry loaded & metrics verified.' });
+      initialLogs.push({ time: timeStr, event: `Active Exam template loaded successfully (ID: ${activeExamId}).` });
+    }
+    return initialLogs;
+  });
   const [recentActivity, setRecentActivity] = useState([]);
   
   // Input File & API Evaluation States
@@ -422,11 +430,11 @@ const Scanner = () => {
               <p className="text-xl font-bold text-gray-900">{totalStudents - scannedCount}</p>
             </div>
             <div className="bg-white p-3 rounded-xl border border-border shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Avg Speed</p>
+              <p className="text-xs text-gray-500 font-medium mb-1">Avg Speed (Est.)</p>
               <p className="text-xl font-bold text-gray-900">1.5<span className="text-xs font-normal text-gray-500 ml-1">s/sheet</span></p>
             </div>
             <div className="bg-white p-3 rounded-xl border border-border shadow-sm">
-              <p className="text-xs text-gray-500 font-medium mb-1">Accuracy</p>
+              <p className="text-xs text-gray-500 font-medium mb-1">Accuracy (Est.)</p>
               <p className="text-xl font-bold text-green-600">99.8%</p>
             </div>
           </div>
