@@ -12,6 +12,9 @@ import { Select } from '../components/ui/Select';
 import { Table } from '../components/ui/Table';
 import { SkeletonLoader } from '../components/ui/SkeletonLoader';
 import resultsData from '../data/results.json';
+import { resultService } from '../services/resultService';
+import { EmptyState } from '../components/common/EmptyState';
+import { ErrorState } from '../components/common/ErrorState';
 import { 
   MdPeopleOutline, MdFactCheck, MdTrendingUp, MdTrendingDown, 
   MdAssessment, MdCheckCircleOutline, MdOutlineCancel, MdGpsFixed,
@@ -61,17 +64,164 @@ const Results = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  useEffect(() => {
-    // Simulate API fetch delay
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+  const [students, setStudents] = useState([]);
+  const [examDetails, setExamDetails] = useState(null);
+  const [summary, setSummary] = useState({
+    totalStudents: 0,
+    evaluated: 0,
+    highestScore: 0,
+    lowestScore: 0,
+    averageScore: 0,
+    passPercentage: 0,
+    failedStudents: 0,
+    accuracy: 99.9
+  });
+  const [leaderboards, setLeaderboards] = useState({
+    top: [],
+    bottom: []
+  });
+  const [error, setError] = useState('');
 
-  const { examDetails, summary, charts, leaderboards, recentExams, students } = resultsData;
+  const examId = localStorage.getItem('currentExamId');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!examId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const [resultsResponse, examResponse] = await Promise.all([
+          resultService.getExamResults(examId),
+          resultService.getExamById(examId)
+        ]);
+
+        if (!isMounted) return;
+
+        const rawResults = resultsResponse?.success && Array.isArray(resultsResponse?.data)
+          ? resultsResponse.data
+          : (Array.isArray(resultsResponse) ? resultsResponse : (resultsResponse?.data || []));
+
+        const totalQuestions = examResponse?.total_questions || 1;
+
+        const sortedStudents = [...rawResults].sort((a, b) => b.score - a.score);
+
+        const mappedStudents = sortedStudents.map((s, index) => {
+          const percentage = Math.max(0, Math.round((s.score / totalQuestions) * 100));
+
+          let status = 'Needs Improvement';
+          if (percentage >= 90) status = 'Excellent';
+          else if (percentage >= 60) status = 'Good';
+          else if (percentage >= 50) status = 'Average';
+
+          return {
+            id: s.student_id,
+            name: s.student_name,
+            rollNumber: s.roll_number,
+            score: s.score,
+            percentage,
+            correct: s.correct_answers,
+            incorrect: s.incorrect_answers,
+            unattempted: s.unattempted_questions,
+            weakAreas: [],
+            status,
+            rank: index + 1
+          };
+        });
+
+        const totalCount = mappedStudents.length;
+
+        let highestRaw = 0;
+        let lowestRaw = 0;
+        let avgScorePct = 0;
+        let passCount = 0;
+        let failCount = 0;
+
+        if (totalCount > 0) {
+          const scores = mappedStudents.map(s => s.score);
+          highestRaw = Math.max(...scores);
+          lowestRaw = Math.min(...scores);
+
+          const sumPercentages = mappedStudents.reduce((sum, s) => sum + s.percentage, 0);
+          avgScorePct = parseFloat((sumPercentages / totalCount).toFixed(1));
+
+          passCount = mappedStudents.filter(s => s.percentage >= 50).length;
+          failCount = totalCount - passCount;
+        }
+
+        const calculatedPassPercent = totalCount > 0
+          ? Math.round((passCount / totalCount) * 100)
+          : 0;
+
+        setStudents(mappedStudents);
+
+        setExamDetails({
+          name: examResponse?.title || 'Examination Results',
+          type: examResponse?.exam_type || 'OMR Exam',
+          date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })
+        });
+
+        setSummary({
+          totalStudents: totalCount,
+          evaluated: totalCount,
+          highestScore: highestRaw,
+          lowestScore: lowestRaw,
+          averageScore: avgScorePct,
+          passPercentage: calculatedPassPercent,
+          failedStudents: failCount,
+          accuracy: 99.9
+        });
+
+        const leaderTop = mappedStudents.slice(0, 3).map((s, index) => ({
+          rank: index + 1,
+          name: s.name,
+          score: s.score
+        }));
+
+        const leaderBottom = [...mappedStudents]
+          .reverse()
+          .slice(0, 3)
+          .map((s, index) => ({
+            rank: totalCount - index,
+            name: s.name,
+            score: s.score
+          }));
+
+        setLeaderboards({
+          top: leaderTop,
+          bottom: leaderBottom
+        });
+
+      } catch (err) {
+        console.error('Error fetching exam results:', err);
+        if (isMounted) {
+          setError('Unable to load exam results. Please ensure the backend server is running and try again.');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [examId]);
+
+  const { charts, recentExams } = resultsData;
 
   // Filter logic
-  const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredStudents = students.filter(student =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.rollNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -111,6 +261,50 @@ const Results = () => {
     )}
   ];
 
+  if (!examId || (!loading && students.length === 0)) {
+    return (
+      <div className="max-w-7xl mx-auto pb-10 space-y-6">
+        <PageHeader 
+          title="Results Dashboard" 
+          description="Analyze examination performance and OMR evaluation statistics." 
+        />
+        <EmptyState 
+          title={!examId ? "No Exam Selected" : "No Results Evaluated"}
+          description={!examId 
+            ? "Please create or select an exam first to inspect result statistics."
+            : "No student evaluation results are available for this exam yet. Use the Scanner to start evaluating OMR sheets."
+          }
+          action={
+            <Button onClick={() => navigate(!examId ? ROUTES.CREATE_EXAM : '/scanner')}>
+              {!examId ? "Create Exam" : "Go to Scanner"}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto pb-10 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <PageHeader 
+              title="Results Dashboard" 
+              description="Analyze examination performance and OMR evaluation statistics." 
+              className="mb-0"
+            />
+          </div>
+        </div>
+        <ErrorState 
+          title="Failed to Load Results" 
+          description={error} 
+          onRetry={() => window.location.reload()} 
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto pb-10 space-y-6">
       
@@ -122,7 +316,7 @@ const Results = () => {
             description="Analyze examination performance and OMR evaluation statistics." 
             className="mb-0"
           />
-          {!loading && (
+          {!loading && examDetails && (
             <div className="flex items-center gap-3 mt-2 text-sm text-gray-600">
               <span className="font-semibold text-gray-900">{examDetails.name}</span>
               <span className="text-gray-300">•</span>

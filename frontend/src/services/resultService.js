@@ -1,15 +1,19 @@
 import api from './api';
 
 export const resultService = {
-  getExamResults: async (examId, params = {}) => {
-    // Example: return await api.get(`/exams/${examId}/results`, { params });
-    console.log(`Fetching results for ${examId} with`, params);
-    return new Promise(resolve => setTimeout(resolve, 500));
+  getExamResults: async (examId) => {
+    const response = await api.get(`/results/exam/${examId}`);
+    return response.data;
+  },
+
+  getExamById: async (examId) => {
+    const response = await api.get(`/exams/${examId}`);
+    return response.data;
   },
   
   getStudentDetails: async (studentId) => {
-    // Example: return await api.get(`/students/${studentId}/report`);
-    console.log(`Fetching details for student ${studentId}`);
-    return new Promise(resolve => setTimeout(resolve, 500));
+    const response = await api.get(`/students/${studentId}/report`);
+    return response.data;
   }
 };
+
