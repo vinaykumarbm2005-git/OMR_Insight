@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ROUTES } from '../constants/routes';
 import { PageHeader } from '../components/common/PageHeader';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -7,7 +8,7 @@ import { Badge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Table } from '../components/ui/Table';
 import scannerData from '../data/scanner.json';
-import { getExamById } from '../services/scannerService';
+import { getExamById, startScan } from '../services/scannerService';
 import { 
   MdOutlineVideocam, MdPlayArrow, MdPause, MdStop, MdRefresh,
   MdCheckCircle, MdInfoOutline, MdCheckCircleOutline,
@@ -17,6 +18,7 @@ import { cn } from '../components/ui/Button';
 
 const Scanner = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Scanner States: 'waiting' | 'scanning' | 'paused' | 'completed' | 'stopped'
   const [scannerState, setScannerState] = useState('waiting');
@@ -30,6 +32,12 @@ const Scanner = () => {
   const [logs, setLogs] = useState(scannerData.logs);
   const [recentActivity, setRecentActivity] = useState([]);
   
+  // Input File & API Evaluation States
+  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [evalError, setEvalError] = useState('');
+
   const navigationState = location.state || {};
   const examId = location.state?.examId || localStorage.getItem('currentExamId');
   const totalStudents = Math.max(Number(examDetails?.totalStudents ?? navigationState.totalStudents ?? scannerData.examInfo.totalStudents) || 0, 1);
@@ -71,55 +79,100 @@ const Scanner = () => {
     loadExamDetails();
   }, [examId, navigationState.title, navigationState.examType, navigationState.totalQuestions, navigationState.totalStudents]);
 
-  // Simulation Logic
-  useEffect(() => {
-    let interval;
-    if (scannerState === 'scanning' && scannedCount < totalStudents) {
-      interval = setInterval(() => {
-        setScannedCount(prev => {
-          const nextCount = prev + 1;
-          
-          // Add a dummy student evaluation every few scans
-          if (nextCount <= scannerData.students.length) {
-            const student = scannerData.students[nextCount - 1];
-            setCurrentStudent(student);
-            
-            setRecentActivity(curr => [
-              { ...student, time: new Date().toLocaleTimeString(), evalStatus: 'Success' },
-              ...curr
-            ].slice(0, 10)); // Keep last 10
-            
-            addLog(`Student ${student.rollNumber} (${student.name}) Evaluated.`);
-          } else {
-             // Generate random student after dummy data is exhausted
-             const randomRoll = `RN-${String(nextCount).padStart(3, '0')}`;
-             setCurrentStudent({ name: `Student ${nextCount}`, rollNumber: randomRoll, status: 'Scanning...' });
-             addLog(`Sheet #${nextCount} Evaluated.`);
-          }
-
-          if (nextCount >= totalStudents) {
-            setScannerState('completed');
-            addLog('Scanning Completed. All sheets evaluated.');
-          }
-          
-          return nextCount;
-        });
-      }, 1500); // 1.5s per sheet
-    }
-    
-    return () => clearInterval(interval);
-  }, [scannerState, scannedCount, totalStudents]);
-
   const addLog = (message) => {
     const time = new Date().toLocaleTimeString();
     setLogs(prev => [{ time, event: message }, ...prev]); // Prepend for terminal style (newest top)
   };
 
   // Actions
-  const handleStart = () => {
-    setScannerState('scanning');
-    if (scannedCount === 0) addLog('Scanner Started. Capturing...');
-    else addLog('Scanner Resumed.');
+  const handleOpenFileSelector = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setEvalError('Invalid file type. Please select an image.');
+        addLog('Error: Invalid file type selected.');
+        return;
+      }
+      setSelectedFile(file);
+      setEvalError(''); // Clear previous errors whenever a new image is selected
+      setScannerState('scanning');
+      addLog(`Selected sheet: ${file.name}`);
+    }
+  };
+
+  const handleStartScan = async () => {
+    // 6. validate an image has been selected
+    if (!selectedFile) {
+      setEvalError('No OMR image selected. Please select an OMR sheet first.');
+      addLog('Error: No OMR sheet selected.');
+      return;
+    }
+
+    // Reset loading and status states whenever a new evaluation starts
+    setEvalLoading(true);
+    setEvalError('');
+    addLog(`Initiating OMR evaluation for sheet: ${selectedFile.name}...`);
+
+    try {
+      const examType = examDetails?.exam_type || navigationState.examType || scannerData.examInfo.type || 'KCET';
+      
+      const response = await startScan(selectedFile, examType);
+      
+      setEvalLoading(false);
+
+      if (response && (response.success || response.success === undefined)) {
+        addLog('Scanning started successfully. OMR sheet submitted for processing.');
+        setScannerState('waiting');
+        setScannedCount(prev => prev + 1);
+
+        // Store identifiers returned by the backend if available
+        const evalData = response.data || {};
+        if (evalData.exam_id) {
+          localStorage.setItem('lastEvaluatedExamId', evalData.exam_id);
+        }
+        if (evalData.student_id) {
+          localStorage.setItem('lastEvaluatedStudentId', evalData.student_id);
+        }
+        if (evalData.id) {
+          localStorage.setItem('lastEvaluatedResultId', evalData.id);
+        }
+
+        // Populate evaluation result stats in UI
+        setCurrentStudent({
+          name: 'Processing Student',
+          rollNumber: evalData.roll_number || 'OMR-PROCESSING',
+          score: evalData.score,
+          result: evalData.score >= 50 ? 'Pass' : 'Fail',
+          time: new Date().toLocaleTimeString()
+        });
+
+        setRecentActivity([
+          {
+            name: 'Processing Student',
+            rollNumber: evalData.roll_number || 'OMR-PROCESSING',
+            score: evalData.score,
+            result: evalData.score >= 50 ? 'Pass' : 'Fail',
+            time: new Date().toLocaleTimeString()
+          }
+        ]);
+
+        setSelectedFile(null);
+        alert('Scanning started successfully.');
+      } else {
+        const errorMsg = response?.message || 'OMR evaluation returned success = false.';
+        setEvalError(errorMsg);
+        addLog(`Error: ${errorMsg}`);
+      }
+    } catch (err) {
+      setEvalLoading(false);
+      const errMsg = err.response?.data?.message || err.message || 'Error occurred during evaluation.';
+      setEvalError(errMsg);
+      addLog(`Error during evaluation: ${errMsg}`);
+    }
   };
 
   const handlePause = () => {
@@ -138,7 +191,10 @@ const Scanner = () => {
     setCurrentStudent(null);
     setRecentActivity([]);
     setLogs(scannerData.logs);
-    addLog('Scanner Reset. Waiting for Camera...');
+    setSelectedFile(null);
+    setEvalError('');
+    setEvalLoading(false);
+    addLog('Scanner Reset. Waiting for OMR sheet...');
   };
 
   // Status Badge Helper
@@ -174,8 +230,15 @@ const Scanner = () => {
 
   return (
     <div className="max-w-7xl mx-auto pb-10 flex flex-col h-[calc(100vh-64px)]">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept="image/*" 
+        style={{ display: 'none' }} 
+      />
       
-      <div className="flex justify-between items-end mb-4 shrink-0">
+      <div className="flex justify-between items-end mb-4 shrink-0 col-span-12">
         <PageHeader 
           title="Live OMR Scanner" 
           description="Monitor and evaluate OMR sheets in real time." 
@@ -237,16 +300,24 @@ const Scanner = () => {
                 <div className="mx-auto h-16 w-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-700">
                   <MdOutlineVideocam className="text-3xl text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">Waiting for Camera</h3>
-                <p className="text-sm text-gray-400 mb-6">Start the scanner to connect to the webcam and begin evaluation.</p>
+                <h3 className="text-lg font-semibold text-white mb-2">Waiting for OMR Image</h3>
+                <p className="text-sm text-gray-400 mb-6 font-normal">Select an OMR sheet photograph or scan to begin evaluation.</p>
                 {scannerState === 'waiting' && (
-                  <Button onClick={handleStart} variant="primary" className="bg-blue-600 hover:bg-blue-700 border-none">
-                    <MdOutlineVideocam className="mr-2" /> Open Camera
+                  <Button onClick={handleOpenFileSelector} variant="primary" className="bg-blue-600 hover:bg-blue-700 border-none">
+                    <MdOutlineVideocam className="mr-2" /> Select OMR Image
                   </Button>
                 )}
               </div>
             ) : (
               <>
+                {selectedFile && (
+                  <img 
+                    src={URL.createObjectURL(selectedFile)} 
+                    className="w-full h-full object-contain filter brightness-95" 
+                    alt="Loaded OMR Sheet" 
+                  />
+                )}
+                
                 {/* Simulated Camera Feed Overlay */}
                 <div className="absolute inset-0 border-2 border-primary/30 m-8 rounded-lg pointer-events-none flex items-center justify-center">
                   <div className="w-[100px] h-[100px] border-t-2 border-l-2 border-primary absolute top-0 left-0"></div>
@@ -259,14 +330,38 @@ const Scanner = () => {
                     <div className="w-full h-0.5 bg-primary/80 absolute shadow-[0_0_8px_2px_rgba(37,99,235,0.5)] animate-[scan_2s_ease-in-out_infinite]" />
                   )}
                 </div>
+
+                {/* Loading Spinner overlay during evaluation */}
+                {evalLoading && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white z-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-3"></div>
+                    <p className="text-sm font-semibold tracking-wide">Processing and evaluating OMR sheet...</p>
+                  </div>
+                )}
+
+                {/* Error overlay with retry button */}
+                {evalError && !evalLoading && (
+                  <div className="absolute inset-0 bg-red-950/80 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 z-20 text-center">
+                    <h4 className="text-lg font-bold text-red-300 mb-2">Evaluation Failed</h4>
+                    <p className="text-sm text-red-200 mb-4 max-w-sm">{evalError}</p>
+                    <div className="flex space-x-3">
+                      <Button onClick={handleStartScan} variant="primary" className="bg-red-600 hover:bg-red-700 border-none">
+                        Retry Scan
+                      </Button>
+                      <Button onClick={handleReset} variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border-none">
+                        Change Image
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="absolute top-4 left-4 flex space-x-2">
                   <div className="px-2 py-1 bg-black/50 backdrop-blur-md rounded text-xs font-semibold text-white flex items-center">
                     <span className={cn("w-2 h-2 rounded-full mr-2", scannerState === 'scanning' ? "bg-red-500 animate-pulse" : "bg-yellow-500")}></span>
-                    {scannerState === 'scanning' ? 'LIVE' : 'PAUSED'}
+                    {scannerState === 'scanning' ? 'LIVE' : 'COMPLETED'}
                   </div>
                   <div className="px-2 py-1 bg-black/50 backdrop-blur-md rounded text-xs font-semibold text-white">
-                    1080p • 60fps
+                    {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : '1080p • 60fps'}
                   </div>
                 </div>
               </>
@@ -370,17 +465,17 @@ const Scanner = () => {
       <div className="mt-4 shrink-0 bg-white border border-border rounded-xl p-4 shadow-sm flex items-center justify-between lg:justify-center lg:space-x-4 overflow-x-auto">
         <Button 
           variant="primary" 
-          onClick={handleStart} 
-          disabled={scannerState === 'scanning' || scannerState === 'completed'}
-          className={cn("w-32", scannerState === 'scanning' ? 'opacity-50' : '')}
+          onClick={handleStartScan} 
+          disabled={evalLoading || scannerState === 'completed'}
+          className={cn("w-32", (evalLoading || scannerState === 'completed') ? 'opacity-50 pointer-events-none' : '')}
         >
           <MdPlayArrow className="mr-2 text-lg" /> 
-          {scannerState === 'paused' ? 'Resume' : 'Start'}
+          Start Scan
         </Button>
         <Button 
           variant="secondary" 
           onClick={handlePause} 
-          disabled={scannerState !== 'scanning'}
+          disabled={scannerState !== 'scanning' || evalLoading}
           className="w-32"
         >
           <MdPause className="mr-2 text-lg" /> Pause
@@ -388,7 +483,7 @@ const Scanner = () => {
         <Button 
           variant="danger" 
           onClick={handleStop} 
-          disabled={scannerState === 'waiting' || scannerState === 'completed' || scannerState === 'stopped'}
+          disabled={scannerState === 'waiting' || scannerState === 'completed' || scannerState === 'stopped' || evalLoading}
           className="w-32"
         >
           <MdStop className="mr-2 text-lg" /> Stop
@@ -397,7 +492,7 @@ const Scanner = () => {
         <Button 
           variant="ghost" 
           onClick={handleReset} 
-          disabled={scannerState === 'waiting'}
+          disabled={scannerState === 'waiting' || evalLoading}
           className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-32"
         >
           <MdRefresh className="mr-2 text-lg" /> Reset
