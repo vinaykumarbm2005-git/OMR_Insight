@@ -10,4 +10,10 @@ export const studentService = {
     const response = await api.get('/students/');
     return response.data;
   },
+
+  getStudentReport: async (studentId) => {
+    const response = await api.get(`/students/${studentId}/report`);
+    return response.data;
+  },
 };
+

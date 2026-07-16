@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../constants/routes';
 import { PageHeader } from '../components/common/PageHeader';
@@ -8,6 +8,9 @@ import { Badge } from '../components/ui/Badge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Table } from '../components/ui/Table';
 import studentsData from '../data/students.json';
+import { studentService } from '../services/studentService';
+import { EmptyState } from '../components/common/EmptyState';
+import { ErrorState } from '../components/common/ErrorState';
 import { 
   MdArrowBack, MdChevronLeft, MdChevronRight, MdFileDownload, 
   MdPrint, MdCheckCircle, MdCancel, MdOutlineRemoveCircleOutline,
@@ -66,14 +69,157 @@ const StudentDetails = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('correct');
 
-  // Fallback to STU001 if id not found (since we only have dummy data for STU001)
-  const student = studentsData[id] || studentsData['STU001'];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [studentDetails, setStudentDetails] = useState(null);
 
-  if (!student) {
-    return <div className="p-10 text-center">Student not found</div>;
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchReport = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const reportResponse = await studentService.getStudentReport(id);
+
+        if (!isMounted) return;
+
+        if (reportResponse?.success && reportResponse?.data) {
+          const apiData = reportResponse.data;
+          
+          // Fallback placeholder student from json for missing properties
+          const fallbackStudent = studentsData[id] || studentsData['STU001'] || {};
+
+          // Calculate properties:
+          const res = apiData.result || {};
+          const correct = res.correct_answers || 0;
+          const incorrect = res.incorrect_answers || 0;
+          const unattempted = res.unattempted_questions || 0;
+          const totalQuestions = correct + incorrect + unattempted || 1;
+
+          const percentage = Math.max(0, Math.round((res.score / totalQuestions) * 100));
+          const accuracy = Math.round((correct / (correct + incorrect || 1)) * 100);
+          const isPassed = percentage >= 50;
+
+          // Build integrated student profile
+          const profile = {
+            name: apiData.student?.name || 'Unknown Student',
+            rollNumber: apiData.student?.roll_number || 'N/A',
+            examName: apiData.exam?.title || 'Unknown Exam',
+            examType: apiData.exam?.exam_type || 'N/A',
+            date: fallbackStudent.profile?.date || new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' }),
+            pass: isPassed,
+            percentage,
+            overallScore: res.score || 0,
+            maxScore: totalQuestions,
+            rank: fallbackStudent.profile?.rank || 1
+          };
+
+          const analytics = {
+            correct,
+            incorrect,
+            unattempted,
+            accuracy,
+            timeTaken: fallbackStudent.analytics?.timeTaken || '45 mins',
+            evaluationStatus: fallbackStudent.analytics?.evaluationStatus || 'Verified'
+          };
+
+          // Combine live details with placeholders
+          setStudentDetails({
+            profile,
+            analytics,
+            summary: fallbackStudent.summary || { insight: '', strongest: '', weakest: '', recommendation: '' },
+            charts: fallbackStudent.charts || { radar: [], bar: [], donut: [], line: [] },
+            correctAnswers: fallbackStudent.correctAnswers || [],
+            incorrectAnswers: fallbackStudent.incorrectAnswers || [],
+            weakAreas: fallbackStudent.weakAreas || [],
+            scanDetails: fallbackStudent.scanDetails || {}
+          });
+        } else {
+          setError('Student report is empty or not formatted correctly.');
+        }
+
+      } catch (err) {
+        console.error('Error fetching student report:', err);
+        if (isMounted) {
+          setError('Unable to load student performance report. Please check if the backend is running and retry.');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchReport();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex h-[calc(100vh-120px)] w-full items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary mb-3"></div>
+          <p className="text-sm font-medium text-gray-500">Loading performance report...</p>
+        </div>
+      </div>
+    );
   }
 
-  const { profile, analytics, charts, correctAnswers, incorrectAnswers, weakAreas, scanDetails, summary } = student;
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto pb-10 space-y-6">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" className="p-2 bg-white shadow-sm border border-border" onClick={() => navigate(ROUTES.RESULTS)}>
+            <MdArrowBack className="text-lg animate-pulse" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Student Performance Report</h1>
+          </div>
+        </div>
+        <ErrorState 
+          title="Failed to Load Report" 
+          description={error} 
+          onRetry={() => window.location.reload()} 
+        />
+      </div>
+    );
+  }
+
+  if (!id || !studentDetails) {
+    return (
+      <div className="max-w-7xl mx-auto pb-10 space-y-6">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" className="p-2 bg-white shadow-sm border border-border" onClick={() => navigate(ROUTES.RESULTS)}>
+            <MdArrowBack className="text-lg" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Student Performance Report</h1>
+          </div>
+        </div>
+        <EmptyState 
+          title="Report Not Found" 
+          description="Either the student ID is missing or no OMR report is available for this student."
+          action={
+            <Button onClick={() => navigate(ROUTES.RESULTS)}>
+              Back to Results
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
+  const { profile, analytics, charts, correctAnswers, incorrectAnswers, weakAreas, scanDetails, summary } = studentDetails;
 
   const correctColumns = [
     { header: 'Question', accessor: 'question', className: 'font-semibold' },
